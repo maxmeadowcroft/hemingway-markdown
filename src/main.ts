@@ -1,110 +1,123 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
-import { wordHighlightExtension } from "./wordHighlight";
+import { MarkdownView, Plugin } from "obsidian";
+import { DEFAULT_SETTINGS, HemingwaySettingTab, MyPluginSettings } from "./settings";
+import { createHemingwayHighlightExtension } from "./wordHighlight";
+import { hemingwayGrade } from "./readability";
+import { HemingwaySidebarView, VIEW_TYPE_HEMINGWAY } from "./sidebar/HemingwaySidebarView";
 
-// Remember to rename these classes and interfaces!
-
-export default class HelloWorldPlugin extends Plugin {
+export default class HemingwayMarkdownPlugin extends Plugin {
 	settings: MyPluginSettings;
+	private statusBarItemEl: HTMLElement | null = null;
+	/** Last leaf that had a MarkdownView, so sidebar still has content when sidebar is focused. */
+	private lastMarkdownLeaf: MarkdownView | null = null;
 
 	async onload() {
-		console.log('loading hemingway-markdown plugin');
 		await this.loadSettings();
-		this.registerEditorExtension(wordHighlightExtension);
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Greet', () => {
-			// Called when the user clicks the icon.
-			new Notice('Hello, world!');
-		});
+		this.registerView(
+			VIEW_TYPE_HEMINGWAY,
+			(leaf) => new HemingwaySidebarView(leaf, this)
+		);
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		// Color can be driven by this.settings.statusBarColor once that setting is added.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Grade 8');
-		statusBarItemEl.style.color = 'red';
+		this.registerEditorExtension(
+			createHemingwayHighlightExtension(() => this.settings)
+		);
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
+		this.statusBarItemEl = this.addStatusBarItem();
+		this.updateReadabilityGrade();
+
+		// Track last markdown view so sidebar and status bar work when sidebar (or another pane) is focused
+		this.lastMarkdownLeaf = this.app.workspace.getActiveViewOfType(MarkdownView) ?? null;
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", () => {
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+				if (markdownView) this.lastMarkdownLeaf = markdownView;
+				this.updateReadabilityGrade();
+				this.refreshHemingwaySidebar();
+			})
+		);
+		this.registerInterval(
+			window.setInterval(() => {
+				this.updateReadabilityGrade();
+				this.refreshHemingwaySidebar();
+			}, 2000)
+		);
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			}
+		this.addCommand({
+			id: "open-hemingway-sidebar",
+			name: "Open Hemingway sidebar",
+			callback: () => this.activateHemingwaySidebar(),
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new HemingwaySettingTab(this.app, this));
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('clicked');
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
+		if (this.settings.sidebarOpenByDefault) {
+			this.activateHemingwaySidebar();
+		}
 	}
 
-	onunload() {
-		console.log('unloading hemingway-markdown plugin');
-	}
+	onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
-		console.log('loaded settings');
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<MyPluginSettings>);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		console.log('saved settings');
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-		console.log('opening modal');
 	}
 
-	onOpen() {
-		let {contentEl} = this;
-		console.log('setting modal content');
-		contentEl.setText('Woah!');
+	/** Content of the last focused markdown editor (so sidebar works when it has focus). */
+	getMarkdownContentForSidebar(): string {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView) ?? this.lastMarkdownLeaf;
+		return view?.editor?.getValue() ?? "";
 	}
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-		console.log('closed modal');
+	/** Update status bar with Hemingway grade; grade >= 15 shows "Post-graduate". Color from settings (good/ok/poor). */
+	updateReadabilityGrade(): void {
+		if (!this.statusBarItemEl) return;
+		const text = this.getMarkdownContentForSidebar();
+		if (!text.trim()) {
+			this.statusBarItemEl.setText("Grade —");
+			return;
+		}
+		const grade = hemingwayGrade(text);
+		const display =
+			grade >= 15 ? "Post-graduate" : `Grade ${grade}`;
+		this.statusBarItemEl.setText(display);
+
+		const target = this.settings.targetGradeLevel;
+		const okRange = this.settings.gradeOkRange;
+		let color: string;
+		if (grade <= target) {
+			color = this.settings.gradeColorGood;
+		} else if (grade <= target + okRange) {
+			color = this.settings.gradeColorOk;
+		} else {
+			color = this.settings.gradeColorPoor;
+		}
+		this.statusBarItemEl.style.color = color;
+	}
+
+	private refreshHemingwaySidebar(): void {
+		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_HEMINGWAY);
+		for (const leaf of leaves) {
+			const view = leaf.view;
+			if (view instanceof HemingwaySidebarView) {
+				view.refresh();
+			}
+		}
+	}
+
+	private async activateHemingwaySidebar(): Promise<void> {
+		const { workspace } = this.app;
+		let leaf = workspace.getLeavesOfType(VIEW_TYPE_HEMINGWAY)[0];
+		if (!leaf) {
+			await workspace.getRightLeaf(true)?.setViewState({
+				type: VIEW_TYPE_HEMINGWAY,
+			});
+			leaf = workspace.getLeavesOfType(VIEW_TYPE_HEMINGWAY)[0];
+		}
+		if (leaf) {
+			workspace.revealLeaf(leaf);
+		}
 	}
 }

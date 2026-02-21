@@ -1,8 +1,94 @@
-/*
+/* Hemingway Markdown plugin styles */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* Sidebar empty state */
+.hm-sidebar-empty {
+	color: var(--text-muted);
+	padding: 8px 0;
+}
 
-If your plugin does not need CSS, delete this file.
+/* Vertical stack of stat cards */
+.hm-sidebar-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	padding: 12px;
+}
 
-*/
+/* Card: full width, rounded, flex row (badge | text | icon) */
+.hm-sidebar-card {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	width: 100%;
+	padding: 20px 18px;
+	border-radius: 12px;
+	cursor: pointer;
+	box-sizing: border-box;
+	transition: filter 0.15s ease;
+}
+
+.hm-sidebar-card:hover {
+	filter: brightness(1.08);
+}
+
+/* Badge: small rounded square, white number */
+.hm-sidebar-badge {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	color: #fff;
+	font-weight: 700;
+	font-size: 14px;
+	flex-shrink: 0;
+}
+
+/* Text block: two lines, white, medium weight */
+.hm-sidebar-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+	min-width: 0;
+	color: #fff;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.35;
+}
+
+.hm-sidebar-text div:first-child {
+	white-space: normal;
+}
+
+/* "View details" link style (weakeners card) */
+.hm-sidebar-view-details {
+	font-size: 12px;
+	text-decoration: underline;
+	opacity: 0.85;
+	cursor: pointer;
+}
+
+.hm-sidebar-view-details:hover {
+	opacity: 1;
+}
+
+/* Eye icon: right-aligned, white with opacity */
+.hm-sidebar-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	opacity: 0.75;
+}
+
+.hm-sidebar-card:hover .hm-sidebar-icon {
+	opacity: 0.95;
+}
+
+.hm-sidebar-icon svg {
+	width: 18px;
+	height: 18px;
+	color: #fff;
+}
