@@ -22,14 +22,12 @@ export function basicCounts(
 }
 
 /**
- * Split text into sentences. In markdown we treat each non-empty line as one sentence;
- * we never merge across newlines, so multiple lines are not counted as a single sentence.
+ * Split text into sentences. We count (1) each segment ending in . ! ? and
+ * (2) each non-empty line that doesn't end with . ! ? (so separate lines are sentences too).
+ * Never merge across newlines.
  */
 export function splitSentences(text: string): string[] {
-	return text
-		.split(/\n/g)
-		.map((s) => s.trim())
-		.filter(Boolean);
+	return getSentenceRanges(text).map((r) => r.text);
 }
 
 export function countWords(text: string): number {
@@ -75,22 +73,67 @@ export function sentenceReadability(sentence: string): SentenceReadability {
 
 /**
  * Returns sentence ranges in the original text (start, end).
- * Each non-empty line is one sentence; we never span newlines (markdown line = sentence unit).
+ * Per line: if the line contains . ! ?, split by those into segments (each segment = one sentence).
+ * If the line has no . ! ?, the whole line is one sentence. We never span newlines.
  */
 export function getSentenceRanges(
 	text: string
 ): { start: number; end: number; text: string }[] {
 	const ranges: { start: number; end: number; text: string }[] = [];
-	let start = 0;
+	let lineStart = 0;
 	for (let i = 0; i <= text.length; i++) {
 		if (i === text.length || text[i] === "\n") {
-			const line = text.slice(start, i);
-			const trimmed = line.trim();
+			const lineContent = text.slice(lineStart, i);
+			const trimmed = lineContent.trim();
 			if (trimmed.length > 0) {
-				ranges.push({ start, end: i, text: trimmed });
+				// Find segments ending in . ! ? within this line
+				const re = /[^.!?]*[.!?]/g;
+				let match: RegExpExecArray | null;
+				let foundAny = false;
+				while ((match = re.exec(lineContent)) !== null) {
+					foundAny = true;
+					const segStart = lineStart + match.index;
+					const segEnd = lineStart + match.index + match[0].length;
+					ranges.push({ start: segStart, end: segEnd, text: match[0].trim() });
+				}
+				// If no .!? on this line, the whole line is one sentence
+				if (!foundAny) {
+					ranges.push({
+						start: lineStart,
+						end: i,
+						text: trimmed,
+					});
+				}
 			}
-			start = i + 1;
+			lineStart = i + 1;
 		}
 	}
 	return ranges;
+}
+
+/** Count paragraphs (blocks separated by blank lines). */
+export function countParagraphs(text: string): number {
+	const blocks = text.trim().split(/\n\s*\n/).filter(Boolean);
+	return blocks.length;
+}
+
+/** Estimated reading time at given words per minute (default 200 WPM). Uses same word count as basicCounts. */
+export function estimateReadingTime(
+	text: string,
+	wordsPerMinute = 200
+): { words: number; hours: number; minutes: number; seconds: number } {
+	const { words } = basicCounts(text);
+	const totalMinutes = words / wordsPerMinute;
+	const totalSeconds = Math.round(totalMinutes * 60);
+	const hours = Math.floor(totalSeconds / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
+	return { words, hours, minutes, seconds };
+}
+
+/** Format reading time as "0h 0m 44s". */
+export function formatReadingTime(
+	rt: { hours: number; minutes: number; seconds: number }
+): string {
+	return `${rt.hours}h ${rt.minutes}m ${rt.seconds}s`;
 }

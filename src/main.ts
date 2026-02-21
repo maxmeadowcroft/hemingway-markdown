@@ -1,12 +1,20 @@
 import { MarkdownView, Plugin } from "obsidian";
 import { DEFAULT_SETTINGS, HemingwaySettingTab, MyPluginSettings } from "./settings";
 import { createHemingwayHighlightExtension } from "./wordHighlight";
-import { hemingwayGrade } from "./readability";
+import {
+	basicCounts,
+	countParagraphs,
+	estimateReadingTime,
+	formatReadingTime,
+	hemingwayGrade,
+} from "./readability";
 import { HemingwaySidebarView, VIEW_TYPE_HEMINGWAY } from "./sidebar/HemingwaySidebarView";
 
 export default class HemingwayMarkdownPlugin extends Plugin {
 	settings: MyPluginSettings;
 	private statusBarItemEl: HTMLElement | null = null;
+	/** Extra status bar items (letters, sentences, paragraphs, reading time) when showExtraStatsInStatusBar is on. */
+	private extraStatusBarEls: HTMLElement[] = [];
 	/** Last leaf that had a MarkdownView, so sidebar still has content when sidebar is focused. */
 	private lastMarkdownLeaf: MarkdownView | null = null;
 
@@ -55,7 +63,9 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 		}
 	}
 
-	onunload() {}
+	onunload() {
+		this.removeExtraStatusBarItems();
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<MyPluginSettings>);
@@ -71,30 +81,74 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 		return view?.editor?.getValue() ?? "";
 	}
 
-	/** Update status bar with Hemingway grade; grade >= 15 shows "Post-graduate". Color from settings (good/ok/poor). */
+	/** Update status bar with Hemingway grade; optionally show extra stats as separate items. */
 	updateReadabilityGrade(): void {
 		if (!this.statusBarItemEl) return;
 		const text = this.getMarkdownContentForSidebar();
-		if (!text.trim()) {
-			this.statusBarItemEl.setText("Grade —");
+
+		if (!this.settings.showExtraStatsInStatusBar) {
+			this.removeExtraStatusBarItems();
+			if (!text.trim()) {
+				this.statusBarItemEl.setText("Grade —");
+				return;
+			}
+			const grade = hemingwayGrade(text);
+			const target = this.settings.targetGradeLevel;
+			const okRange = this.settings.gradeOkRange;
+			let color: string;
+			if (grade <= target) color = this.settings.gradeColorGood;
+			else if (grade <= target + okRange) color = this.settings.gradeColorOk;
+			else color = this.settings.gradeColorPoor;
+			this.statusBarItemEl.style.color = color;
+			this.statusBarItemEl.setText(
+				grade >= 15 ? "Post-graduate" : `Grade ${grade}`
+			);
 			return;
 		}
-		const grade = hemingwayGrade(text);
-		const display =
-			grade >= 15 ? "Post-graduate" : `Grade ${grade}`;
-		this.statusBarItemEl.setText(display);
 
+		// Extra stats on: ensure we have 4 separate status bar items
+		if (this.extraStatusBarEls.length === 0) {
+			for (let i = 0; i < 4; i++) {
+				this.extraStatusBarEls.push(this.addStatusBarItem());
+			}
+		}
+
+		if (!text.trim()) {
+			this.statusBarItemEl.setText("—");
+			this.extraStatusBarEls.forEach((el) => el.setText("—"));
+			return;
+		}
+
+		const grade = hemingwayGrade(text);
 		const target = this.settings.targetGradeLevel;
 		const okRange = this.settings.gradeOkRange;
 		let color: string;
-		if (grade <= target) {
-			color = this.settings.gradeColorGood;
-		} else if (grade <= target + okRange) {
-			color = this.settings.gradeColorOk;
-		} else {
-			color = this.settings.gradeColorPoor;
-		}
+		if (grade <= target) color = this.settings.gradeColorGood;
+		else if (grade <= target + okRange) color = this.settings.gradeColorOk;
+		else color = this.settings.gradeColorPoor;
+
+		const counts = basicCounts(text);
+		const paragraphs = countParagraphs(text);
+		const rt = estimateReadingTime(text);
+		const gradeLabel = grade >= 15 ? "Post-graduate" : `Grade ${grade}`;
+
 		this.statusBarItemEl.style.color = color;
+		this.statusBarItemEl.setText(gradeLabel);
+
+		const [lettersEl, sentencesEl, paragraphsEl, readingEl] = this.extraStatusBarEls;
+		lettersEl?.setText(counts.letters.toLocaleString() + " letters");
+		sentencesEl?.setText(
+			counts.sentences.toLocaleString() + " sentences"
+		);
+		paragraphsEl?.setText(
+			paragraphs.toLocaleString() + " paragraphs"
+		);
+		readingEl?.setText(formatReadingTime(rt) + " read");
+	}
+
+	private removeExtraStatusBarItems(): void {
+		this.extraStatusBarEls.forEach((el) => el.remove());
+		this.extraStatusBarEls = [];
 	}
 
 	private refreshHemingwaySidebar(): void {

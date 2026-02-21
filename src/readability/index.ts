@@ -69,5 +69,12 @@ export function analyzeText(text: string): AnalysisResult {
 }
 
 // Re-export for consumers that need grade or helpers only
-export { hemingwayGrade, sentenceReadability } from "./grade";
+export {
+	basicCounts,
+	countParagraphs,
+	estimateReadingTime,
+	formatReadingTime,
+	hemingwayGrade,
+	sentenceReadability,
+} from "./grade";
 export type { SentenceReadability } from "./grade";

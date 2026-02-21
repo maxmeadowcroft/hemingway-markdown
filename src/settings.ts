@@ -21,6 +21,8 @@ export interface MyPluginSettings {
 	gradeColorPoor: string;
 	// Sidebar
 	sidebarOpenByDefault: boolean;
+	// Status bar: show words, characters, grade, and other stats (off by default)
+	showExtraStatsInStatusBar: boolean;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
@@ -38,7 +40,8 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	gradeColorGood: "#27ae60",
 	gradeColorOk: "#f39c12",
 	gradeColorPoor: "#e74c3c",
-	sidebarOpenByDefault: false,
+	sidebarOpenByDefault: true,
+	showExtraStatsInStatusBar: false,
 };
 
 export class HemingwaySettingTab extends PluginSettingTab {
@@ -208,6 +211,23 @@ export class HemingwaySettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.gradeColorPoor)
 					.onChange(async (v) => {
 						this.plugin.settings.gradeColorPoor = v;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		// --- Status bar ---
+		containerEl.createEl("h2", { text: "Status bar" });
+
+		new Setting(containerEl)
+			.setName("Show extra stats in status bar")
+			.setDesc(
+				"When enabled, the status bar shows words, characters, grade, letters, sentences, paragraphs, and reading time. Off by default (Obsidian already shows words and characters)."
+			)
+			.addToggle((t) =>
+				t
+					.setValue(this.plugin.settings.showExtraStatsInStatusBar)
+					.onChange(async (v) => {
+						this.plugin.settings.showExtraStatsInStatusBar = v;
 						await this.plugin.saveSettings();
 					})
 			);
