@@ -3,10 +3,13 @@ import MyPlugin from "./main";
 
 export interface MyPluginSettings {
 	mySetting: string;
+	// Future: status bar customization (e.g. color, visibility)
+	// statusBarColor?: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+	mySetting: 'default',
+	// statusBarColor: 'red',
 }
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -32,5 +35,12 @@ export class SampleSettingTab extends PluginSettingTab {
 					this.plugin.settings.mySetting = value;
 					await this.plugin.saveSettings();
 				}));
+
+		// --- Status bar (future customization) ---
+		// Example: add a color picker or dropdown here and set statusBarItemEl.style.color in main.ts on change.
+		// new Setting(containerEl)
+		// 	.setName('Status bar color')
+		// 	.setDesc('Color for the readability grade in the status bar.')
+		// 	.addText(text => text.setPlaceholder('e.g. red, #7c3aed').setValue(this.plugin.settings.statusBarColor ?? 'red').onChange(...));
 	}
 }

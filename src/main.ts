@@ -19,8 +19,10 @@ export default class HelloWorldPlugin extends Plugin {
 		});
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
+		// Color can be driven by this.settings.statusBarColor once that setting is added.
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
+		statusBarItemEl.setText('Grade 8');
+		statusBarItemEl.style.color = 'red';
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
