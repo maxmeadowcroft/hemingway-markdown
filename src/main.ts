@@ -1,18 +1,21 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import { wordHighlightExtension } from "./wordHighlight";
 
 // Remember to rename these classes and interfaces!
 
-export default class MyPlugin extends Plugin {
+export default class HelloWorldPlugin extends Plugin {
 	settings: MyPluginSettings;
 
 	async onload() {
+		console.log('loading hemingway-markdown plugin');
 		await this.loadSettings();
+		this.registerEditorExtension(wordHighlightExtension);
 
 		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
+		this.addRibbonIcon('dice', 'Greet', () => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			new Notice('Hello, world!');
 		});
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
@@ -62,7 +65,7 @@ export default class MyPlugin extends Plugin {
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
+			console.log('clicked');
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
@@ -71,29 +74,35 @@ export default class MyPlugin extends Plugin {
 	}
 
 	onunload() {
+		console.log('unloading hemingway-markdown plugin');
 	}
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
+		console.log('loaded settings');
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		console.log('saved settings');
 	}
 }
 
 class SampleModal extends Modal {
 	constructor(app: App) {
 		super(app);
+		console.log('opening modal');
 	}
 
 	onOpen() {
 		let {contentEl} = this;
+		console.log('setting modal content');
 		contentEl.setText('Woah!');
 	}
 
 	onClose() {
 		const {contentEl} = this;
 		contentEl.empty();
+		console.log('closed modal');
 	}
 }
