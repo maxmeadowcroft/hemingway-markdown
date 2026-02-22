@@ -1,6 +1,9 @@
 import { MarkdownView, Plugin } from "obsidian";
 import { DEFAULT_SETTINGS, HemingwaySettingTab, MyPluginSettings } from "./settings";
-import { createHemingwayHighlightExtension } from "./wordHighlight";
+import {
+	createHemingwayHighlightExtension,
+	refreshHighlightsEffect,
+} from "./wordHighlight";
 import {
 	basicCounts,
 	countParagraphs,
@@ -9,6 +12,7 @@ import {
 	hemingwayGrade,
 } from "./readability";
 import { HemingwaySidebarView, VIEW_TYPE_HEMINGWAY } from "./sidebar/HemingwaySidebarView";
+import { WelcomeModal } from "./WelcomeModal";
 
 export default class HemingwayMarkdownPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -61,6 +65,17 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 		if (this.settings.sidebarOpenByDefault) {
 			this.activateHemingwaySidebar();
 		}
+
+		// First-time welcome popup (once per install)
+		if (!this.settings.hasSeenWelcomePopup) {
+			window.setTimeout(() => {
+				const modal = new WelcomeModal(this.app, () => {
+					this.settings.hasSeenWelcomePopup = true;
+					this.saveSettings();
+				});
+				modal.open();
+			}, 500);
+		}
 	}
 
 	onunload() {
@@ -88,6 +103,12 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 
 		if (!this.settings.showExtraStatsInStatusBar) {
 			this.removeExtraStatusBarItems();
+			if (!this.settings.showGradeInStatusBar) {
+				this.statusBarItemEl.setText("");
+				this.statusBarItemEl.style.display = "none";
+				return;
+			}
+			this.statusBarItemEl.style.display = "";
 			if (!text.trim()) {
 				this.statusBarItemEl.setText("Grade —");
 				return;
@@ -114,26 +135,37 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 		}
 
 		if (!text.trim()) {
-			this.statusBarItemEl.setText("—");
+			if (this.settings.showGradeInStatusBar) {
+				this.statusBarItemEl.style.display = "";
+				this.statusBarItemEl.setText("—");
+			} else {
+				this.statusBarItemEl.style.display = "none";
+				this.statusBarItemEl.setText("");
+			}
 			this.extraStatusBarEls.forEach((el) => el.setText("—"));
 			return;
 		}
 
-		const grade = hemingwayGrade(text);
-		const target = this.settings.targetGradeLevel;
-		const okRange = this.settings.gradeOkRange;
-		let color: string;
-		if (grade <= target) color = this.settings.gradeColorGood;
-		else if (grade <= target + okRange) color = this.settings.gradeColorOk;
-		else color = this.settings.gradeColorPoor;
-
 		const counts = basicCounts(text);
 		const paragraphs = countParagraphs(text);
 		const rt = estimateReadingTime(text);
-		const gradeLabel = grade >= 15 ? "Post-graduate" : `Grade ${grade}`;
 
-		this.statusBarItemEl.style.color = color;
-		this.statusBarItemEl.setText(gradeLabel);
+		if (this.settings.showGradeInStatusBar) {
+			const grade = hemingwayGrade(text);
+			const target = this.settings.targetGradeLevel;
+			const okRange = this.settings.gradeOkRange;
+			let color: string;
+			if (grade <= target) color = this.settings.gradeColorGood;
+			else if (grade <= target + okRange) color = this.settings.gradeColorOk;
+			else color = this.settings.gradeColorPoor;
+			const gradeLabel = grade >= 15 ? "Post-graduate" : `Grade ${grade}`;
+			this.statusBarItemEl.style.display = "";
+			this.statusBarItemEl.style.color = color;
+			this.statusBarItemEl.setText(gradeLabel);
+		} else {
+			this.statusBarItemEl.style.display = "none";
+			this.statusBarItemEl.setText("");
+		}
 
 		const [lettersEl, sentencesEl, paragraphsEl, readingEl] = this.extraStatusBarEls;
 		lettersEl?.setText(counts.letters.toLocaleString() + " letters");
@@ -149,6 +181,27 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 	private removeExtraStatusBarItems(): void {
 		this.extraStatusBarEls.forEach((el) => el.remove());
 		this.extraStatusBarEls = [];
+	}
+
+	/** Call after settings change so highlights and sidebar update without reopening the file. */
+	refreshAfterSettingsChange(): void {
+		this.refreshHemingwaySidebar();
+		this.updateReadabilityGrade();
+		// Force highlight decorations to recompute via CodeMirror effect
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView) ?? this.lastMarkdownLeaf;
+		if (view?.editor) {
+			try {
+				const editor = view.editor as unknown as {
+					cm?: { dispatch: (tr: { effects: unknown[] }) => void };
+				};
+				const cm = editor?.cm;
+				if (cm?.dispatch) {
+					cm.dispatch({ effects: [refreshHighlightsEffect.of(undefined)] });
+				}
+			} catch {
+				// ignore
+			}
+		}
 	}
 
 	private refreshHemingwaySidebar(): void {

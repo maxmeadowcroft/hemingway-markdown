@@ -1,4 +1,4 @@
-import { Range } from "@codemirror/state";
+import { Range, StateEffect } from "@codemirror/state";
 import {
 	Decoration,
 	DecorationSet,
@@ -6,6 +6,9 @@ import {
 	ViewPlugin,
 	ViewUpdate,
 } from "@codemirror/view";
+
+/** Dispatched to force highlight decorations to recompute (e.g. after settings change). */
+export const refreshHighlightsEffect = StateEffect.define<void>();
 import type { MyPluginSettings } from "./settings";
 import { analyzeText } from "./readability";
 
@@ -40,10 +43,14 @@ function buildDecorations(
 		},
 	});
 
+	// Don't highlight trailing . ! ? on sentences
+	const sentenceHighlightEnd = (s: { start: number; end: number; text: string }) =>
+		/[.!?]$/.test(s.text) && s.end > s.start ? s.end - 1 : s.end;
+
 	if (settings.highlightVeryHard) {
 		for (const s of result.sentences) {
 			if (s.style === "veryHard") {
-				ranges.push(markVeryHard.range(s.start, s.end));
+				ranges.push(markVeryHard.range(s.start, sentenceHighlightEnd(s)));
 			}
 		}
 	}
@@ -51,7 +58,7 @@ function buildDecorations(
 	if (settings.highlightHard) {
 		for (const s of result.sentences) {
 			if (s.style === "hard") {
-				ranges.push(markHard.range(s.start, s.end));
+				ranges.push(markHard.range(s.start, sentenceHighlightEnd(s)));
 			}
 		}
 	}
@@ -96,7 +103,14 @@ export function createHemingwayHighlightExtension(
 			}
 
 			update(update: ViewUpdate) {
-				if (update.docChanged || update.viewportChanged) {
+				const refreshRequested = update.transactions.some((tr) =>
+					tr.effects.some((e) => e.is(refreshHighlightsEffect))
+				);
+				if (
+					update.docChanged ||
+					update.viewportChanged ||
+					refreshRequested
+				) {
 					this.decorations = buildDecorations(update.view, getSettings);
 				}
 			}

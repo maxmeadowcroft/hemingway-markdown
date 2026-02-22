@@ -186,3 +186,51 @@
 	height: 18px;
 	color: #fff;
 }
+
+/* Welcome modal (first-time CTA) */
+.hemingway-welcome-modal p {
+	margin: 0.75em 0;
+	line-height: 1.5;
+}
+.hemingway-welcome-modal p:first-child {
+	margin-top: 0;
+}
+.hemingway-welcome-modal__buttons {
+	display: flex;
+	gap: 10px;
+	margin-top: 1.25em;
+	flex-wrap: wrap;
+}
+
+/* Settings panel community CTA banner */
+.hemingway-settings-cta {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 14px 16px;
+	margin-bottom: 20px;
+}
+.hemingway-settings-cta__title {
+	font-weight: 600;
+	font-size: 14px;
+	margin: 0 0 6px 0;
+	color: var(--text-normal);
+}
+.hemingway-settings-cta__desc {
+	font-size: 13px;
+	color: var(--text-muted);
+	margin: 0 0 12px 0;
+	line-height: 1.4;
+}
+.hemingway-settings-cta a {
+	display: inline-block;
+	padding: 6px 12px;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-radius: 6px;
+	text-decoration: none;
+	font-size: 13px;
+}
+.hemingway-settings-cta a:hover {
+	background: var(--interactive-accent-hover);
+}

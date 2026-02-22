@@ -86,55 +86,59 @@ export class HemingwaySidebarView extends ItemView {
 
 		const container = contentEl.createDiv({ cls: "hm-sidebar-stack" });
 
-		// 1. Very hard card
-		const cardVeryHard = container.createDiv({ cls: "hm-sidebar-card" });
-		cardVeryHard.style.backgroundColor = s.colorVeryHard;
-		cardVeryHard.dataset.kind = "veryHard";
-		const badgeVh = cardVeryHard.createDiv({ cls: "hm-sidebar-badge" });
-		badgeVh.style.backgroundColor = brighten(s.colorVeryHard, 0.25);
-		badgeVh.setText(String(result.veryHardCount));
-		const textVh = cardVeryHard.createDiv({ cls: "hm-sidebar-text" });
-		const fullVh = result.veryHardCount === 1
-			? "of " + result.totalSentences + " sentences is very hard to read."
-			: "of " + result.totalSentences + " sentences are very hard to read.";
-		textVh.createEl("div", { cls: "hm-sidebar-text-line", text: fullVh });
+		if (s.highlightVeryHard) {
+			const cardVeryHard = container.createDiv({ cls: "hm-sidebar-card" });
+			cardVeryHard.style.backgroundColor = s.colorVeryHard;
+			cardVeryHard.dataset.kind = "veryHard";
+			const badgeVh = cardVeryHard.createDiv({ cls: "hm-sidebar-badge" });
+			badgeVh.style.backgroundColor = brighten(s.colorVeryHard, 0.25);
+			badgeVh.setText(String(result.veryHardCount));
+			const textVh = cardVeryHard.createDiv({ cls: "hm-sidebar-text" });
+			const fullVh = result.veryHardCount === 1
+				? "of " + result.totalSentences + " sentences is very hard to read."
+				: "of " + result.totalSentences + " sentences are very hard to read.";
+			textVh.createEl("div", { cls: "hm-sidebar-text-line", text: fullVh });
+		}
 
-		// 2. Hard card
-		const cardHard = container.createDiv({ cls: "hm-sidebar-card" });
-		cardHard.style.backgroundColor = s.colorHard;
-		cardHard.dataset.kind = "hard";
-		const badgeHard = cardHard.createDiv({ cls: "hm-sidebar-badge" });
-		badgeHard.style.backgroundColor = brighten(s.colorHard, 0.25);
-		badgeHard.setText(String(result.hardCount));
-		const textHard = cardHard.createDiv({ cls: "hm-sidebar-text" });
-		const fullHard = result.hardCount === 1
-			? "of " + result.totalSentences + " sentences is hard to read."
-			: "of " + result.totalSentences + " sentences are hard to read.";
-		textHard.createEl("div", { cls: "hm-sidebar-text-line", text: fullHard });
+		if (s.highlightHard) {
+			const cardHard = container.createDiv({ cls: "hm-sidebar-card" });
+			cardHard.style.backgroundColor = s.colorHard;
+			cardHard.dataset.kind = "hard";
+			const badgeHard = cardHard.createDiv({ cls: "hm-sidebar-badge" });
+			badgeHard.style.backgroundColor = brighten(s.colorHard, 0.25);
+			badgeHard.setText(String(result.hardCount));
+			const textHard = cardHard.createDiv({ cls: "hm-sidebar-text" });
+			const fullHard = result.hardCount === 1
+				? "of " + result.totalSentences + " sentences is hard to read."
+				: "of " + result.totalSentences + " sentences are hard to read.";
+			textHard.createEl("div", { cls: "hm-sidebar-text-line", text: fullHard });
+		}
 
-		// 3. Weakeners card
-		const cardWeak = container.createDiv({ cls: "hm-sidebar-card" });
-		cardWeak.style.backgroundColor = s.colorWeakeners;
-		cardWeak.dataset.kind = "weakeners";
-		const badgeWeak = cardWeak.createDiv({ cls: "hm-sidebar-badge" });
-		badgeWeak.style.backgroundColor = brighten(s.colorWeakeners, 0.25);
-		badgeWeak.setText(String(weakenersCount));
-		const textWeak = cardWeak.createDiv({ cls: "hm-sidebar-text" });
-		textWeak.createEl("div", { text: weakenersCount === 1 ? "weakaner." : "weakeners." });
+		if (s.highlightWeakeners) {
+			const cardWeak = container.createDiv({ cls: "hm-sidebar-card" });
+			cardWeak.style.backgroundColor = s.colorWeakeners;
+			cardWeak.dataset.kind = "weakeners";
+			const badgeWeak = cardWeak.createDiv({ cls: "hm-sidebar-badge" });
+			badgeWeak.style.backgroundColor = brighten(s.colorWeakeners, 0.25);
+			badgeWeak.setText(String(weakenersCount));
+			const textWeak = cardWeak.createDiv({ cls: "hm-sidebar-text" });
+			textWeak.createEl("div", { text: weakenersCount === 1 ? "weakaner." : "weakeners." });
+		}
 
-		// 4. Simpler alternatives card
-		const cardSimp = container.createDiv({ cls: "hm-sidebar-card" });
-		cardSimp.style.backgroundColor = s.colorSimplerAlternatives;
-		cardSimp.dataset.kind = "simpler";
-		const badgeSimp = cardSimp.createDiv({ cls: "hm-sidebar-badge" });
-		badgeSimp.style.backgroundColor = brighten(s.colorSimplerAlternatives, 0.25);
-		badgeSimp.setText(String(result.simpler.length));
-		const textSimp = cardSimp.createDiv({ cls: "hm-sidebar-text" });
-		textSimp.createEl("div", {
-			text: result.simpler.length === 1
-				? "word with a simpler alternative."
-				: "words with simpler alternatives.",
-		});
+		if (s.highlightSimplerAlternatives) {
+			const cardSimp = container.createDiv({ cls: "hm-sidebar-card" });
+			cardSimp.style.backgroundColor = s.colorSimplerAlternatives;
+			cardSimp.dataset.kind = "simpler";
+			const badgeSimp = cardSimp.createDiv({ cls: "hm-sidebar-badge" });
+			badgeSimp.style.backgroundColor = brighten(s.colorSimplerAlternatives, 0.25);
+			badgeSimp.setText(String(result.simpler.length));
+			const textSimp = cardSimp.createDiv({ cls: "hm-sidebar-text" });
+			textSimp.createEl("div", {
+				text: result.simpler.length === 1
+					? "word with a simpler alternative."
+					: "words with simpler alternatives.",
+			});
+		}
 
 		contentEl.createEl("hr", { cls: "hm-sidebar-hr" });
 
