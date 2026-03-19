@@ -1,5 +1,9 @@
 import { MarkdownView, Plugin } from "obsidian";
-import { DEFAULT_SETTINGS, HemingwaySettingTab, MyPluginSettings } from "./settings";
+import {
+	DEFAULT_SETTINGS,
+	HemingwaySettingTab,
+	HemingwayMarkdownSettings,
+} from "./settings";
 import {
 	createHemingwayHighlightExtension,
 	refreshHighlightsEffect,
@@ -15,7 +19,7 @@ import { HemingwaySidebarView, VIEW_TYPE_HEMINGWAY } from "./sidebar/HemingwaySi
 import { WelcomeModal } from "./WelcomeModal";
 
 export default class HemingwayMarkdownPlugin extends Plugin {
-	settings: MyPluginSettings;
+	settings: HemingwayMarkdownSettings;
 	private statusBarItemEl: HTMLElement | null = null;
 	/** Extra status bar items (letters, sentences, paragraphs, reading time) when showExtraStatsInStatusBar is on. */
 	private extraStatusBarEls: HTMLElement[] = [];
@@ -63,7 +67,7 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 		this.addSettingTab(new HemingwaySettingTab(this.app, this));
 
 		if (this.settings.sidebarOpenByDefault) {
-			this.activateHemingwaySidebar();
+			void this.activateHemingwaySidebar();
 		}
 
 		// First-time welcome popup (once per install)
@@ -71,7 +75,7 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 			window.setTimeout(() => {
 				const modal = new WelcomeModal(this.app, () => {
 					this.settings.hasSeenWelcomePopup = true;
-					this.saveSettings();
+					void this.saveSettings();
 				});
 				modal.open();
 			}, 500);
@@ -83,7 +87,11 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<MyPluginSettings>);
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			(await this.loadData()) as Partial<HemingwayMarkdownSettings>
+		);
 	}
 
 	async saveSettings() {
@@ -105,10 +113,10 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 			this.removeExtraStatusBarItems();
 			if (!this.settings.showGradeInStatusBar) {
 				this.statusBarItemEl.setText("");
-				this.statusBarItemEl.style.display = "none";
+				this.statusBarItemEl.setCssProps({ display: "none" });
 				return;
 			}
-			this.statusBarItemEl.style.display = "";
+			this.statusBarItemEl.setCssProps({ display: "" });
 			if (!text.trim()) {
 				this.statusBarItemEl.setText("Grade —");
 				return;
@@ -136,10 +144,10 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 
 		if (!text.trim()) {
 			if (this.settings.showGradeInStatusBar) {
-				this.statusBarItemEl.style.display = "";
+				this.statusBarItemEl.setCssProps({ display: "" });
 				this.statusBarItemEl.setText("—");
 			} else {
-				this.statusBarItemEl.style.display = "none";
+				this.statusBarItemEl.setCssProps({ display: "none" });
 				this.statusBarItemEl.setText("");
 			}
 			this.extraStatusBarEls.forEach((el) => el.setText("—"));
@@ -159,11 +167,11 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 			else if (grade <= target + okRange) color = this.settings.gradeColorOk;
 			else color = this.settings.gradeColorPoor;
 			const gradeLabel = grade >= 15 ? "Post-graduate" : `Grade ${grade}`;
-			this.statusBarItemEl.style.display = "";
+			this.statusBarItemEl.setCssProps({ display: "" });
 			this.statusBarItemEl.style.color = color;
 			this.statusBarItemEl.setText(gradeLabel);
 		} else {
-			this.statusBarItemEl.style.display = "none";
+			this.statusBarItemEl.setCssProps({ display: "none" });
 			this.statusBarItemEl.setText("");
 		}
 
@@ -224,7 +232,7 @@ export default class HemingwayMarkdownPlugin extends Plugin {
 			leaf = workspace.getLeavesOfType(VIEW_TYPE_HEMINGWAY)[0];
 		}
 		if (leaf) {
-			workspace.revealLeaf(leaf);
+			void workspace.revealLeaf(leaf);
 		}
 	}
 }

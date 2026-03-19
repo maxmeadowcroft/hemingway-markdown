@@ -1,4 +1,4 @@
-import { ItemView, setIcon, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf } from "obsidian";
 import type HemingwayMarkdownPlugin from "../main";
 import {
 	analyzeText,
@@ -6,7 +6,6 @@ import {
 	countParagraphs,
 	estimateReadingTime,
 	formatReadingTime,
-	hemingwayGrade,
 } from "../readability";
 
 export const VIEW_TYPE_HEMINGWAY = "hemingway-sidebar";

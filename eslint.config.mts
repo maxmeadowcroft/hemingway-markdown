@@ -22,6 +22,25 @@ export default tseslint.config(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		files: ["**/*.ts", "**/*.tsx"],
+		plugins: { obsidianmd },
+		rules: {
+			"obsidianmd/ui/sentence-case": [
+				"error",
+				{
+					enforceCamelCaseLower: true,
+					ignoreRegex: [
+						"Hemingway",
+						"Python",
+						"Post-graduate",
+						"Skool",
+						"Grade \\d",
+					],
+				},
+			],
+		},
+	},
 	globalIgnores([
 		"node_modules",
 		"dist",

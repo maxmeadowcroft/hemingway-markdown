@@ -9,12 +9,12 @@ import {
 
 /** Dispatched to force highlight decorations to recompute (e.g. after settings change). */
 export const refreshHighlightsEffect = StateEffect.define<void>();
-import type { MyPluginSettings } from "./settings";
+import type { HemingwayMarkdownSettings } from "./settings";
 import { analyzeText } from "./readability";
 
 function buildDecorations(
 	view: EditorView,
-	getSettings: () => MyPluginSettings
+	getSettings: () => HemingwayMarkdownSettings
 ): DecorationSet {
 	const text = view.state.doc.toString();
 	const result = analyzeText(text);
@@ -92,7 +92,7 @@ function buildDecorations(
  * Uses getSettings() so changes in the settings tab apply on next doc/viewport update.
  */
 export function createHemingwayHighlightExtension(
-	getSettings: () => MyPluginSettings
+	getSettings: () => HemingwayMarkdownSettings
 ): import("@codemirror/state").Extension[] {
 	const viewPlugin = ViewPlugin.fromClass(
 		class {

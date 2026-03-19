@@ -1,8 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import HemingwayMarkdownPlugin from "./main";
 
-export interface MyPluginSettings {
-	mySetting: string;
+export interface HemingwayMarkdownSettings {
 	// Highlight toggles
 	highlightVeryHard: boolean;
 	highlightHard: boolean;
@@ -28,8 +27,7 @@ export interface MyPluginSettings {
 	hasSeenWelcomePopup: boolean;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: "default",
+export const DEFAULT_SETTINGS: HemingwayMarkdownSettings = {
 	highlightVeryHard: true,
 	highlightHard: true,
 	highlightWeakeners: true,
@@ -74,7 +72,7 @@ export class HemingwaySettingTab extends PluginSettingTab {
 		link.setAttr("rel", "noopener");
 
 		// --- Highlighting ---
-		containerEl.createEl("h2", { text: "Highlighting" });
+		new Setting(containerEl).setName("Highlighting").setHeading();
 
 		let colorVeryHardPicker: { setValue: (v: string) => void } | null = null;
 		new Setting(containerEl)
@@ -197,12 +195,12 @@ export class HemingwaySettingTab extends PluginSettingTab {
 			);
 
 		// --- Grade level ---
-		containerEl.createEl("h2", { text: "Grade level" });
+		new Setting(containerEl).setName("Grade level").setHeading();
 
 		new Setting(containerEl)
 			.setName("Target grade level")
 			.setDesc(
-				"Your target readability grade. At or below = good; above target+ok range = poor."
+				"Your target readability grade. At or below = good; above target + OK range = poor."
 			)
 			.addText((t) =>
 				t
@@ -219,9 +217,9 @@ export class HemingwaySettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Ok range")
+			.setName("OK range")
 			.setDesc(
-				"Grades from (target+1) to (target+ok range) are shown as 'ok'. E.g. target 8, range 4 → 9–12 is ok."
+				"Grades from (target + 1) to (target + OK range) count as OK—for example, target 8 and range 4 means grades 9–12 are OK."
 			)
 			.addText((t) =>
 				t
@@ -260,8 +258,8 @@ export class HemingwaySettingTab extends PluginSettingTab {
 
 		let gradeColorOkPicker: { setValue: (v: string) => void } | null = null;
 		new Setting(containerEl)
-			.setName("Ok color")
-			.setDesc("Status bar color when grade is in the ok range.")
+			.setName("OK color")
+			.setDesc("Status bar color when grade is in the OK range.")
 			.addColorPicker((c) => {
 				gradeColorOkPicker = c;
 				c.setValue(this.plugin.settings.gradeColorOk).onChange(async (v) => {
@@ -282,7 +280,7 @@ export class HemingwaySettingTab extends PluginSettingTab {
 		let gradeColorPoorPicker: { setValue: (v: string) => void } | null = null;
 		new Setting(containerEl)
 			.setName("Poor color")
-			.setDesc("Status bar color when grade is above the ok range.")
+			.setDesc("Status bar color when grade is above the OK range.")
 			.addColorPicker((c) => {
 				gradeColorPoorPicker = c;
 				c.setValue(this.plugin.settings.gradeColorPoor).onChange(async (v) => {
@@ -301,7 +299,7 @@ export class HemingwaySettingTab extends PluginSettingTab {
 			);
 
 		// --- Status bar ---
-		containerEl.createEl("h2", { text: "Status bar" });
+		new Setting(containerEl).setName("Status bar").setHeading();
 
 		new Setting(containerEl)
 			.setName("Show grade in status bar")
@@ -332,7 +330,7 @@ export class HemingwaySettingTab extends PluginSettingTab {
 			);
 
 		// --- Sidebar ---
-		containerEl.createEl("h2", { text: "Sidebar" });
+		new Setting(containerEl).setName("Sidebar").setHeading();
 
 		new Setting(containerEl)
 			.setName("Open Hemingway sidebar by default")

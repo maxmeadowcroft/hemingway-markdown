@@ -12,7 +12,7 @@ export function basicCounts(
 
 	const wordMatches = text
 		.trim()
-		.match(/[A-Za-z0-9]+(?:['\-][A-Za-z0-9]+)*/g);
+		.match(/[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/g);
 	const words = wordMatches?.length ?? 0;
 
 	const sentenceChunks = splitSentences(text);
@@ -31,7 +31,7 @@ export function splitSentences(text: string): string[] {
 }
 
 export function countWords(text: string): number {
-	const m = text.match(/[A-Za-z0-9]+(?:['\-][A-Za-z0-9]+)*/g);
+	const m = text.match(/[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/g);
 	return m?.length ?? 0;
 }
 

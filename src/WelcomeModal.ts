@@ -15,7 +15,9 @@ export class WelcomeModal extends Modal {
 
 		const body = this.contentEl.createDiv({ cls: "hemingway-welcome-modal" });
 
-		body.createEl("p", { text: "Quick tip: Paste any draft in here and aim for Grade 3 or below." });
+		body.createEl("p", {
+			text: "Quick tip: paste any draft in here and aim for grade 3 or below.",
+		});
 		body.createEl("p", {
 			text: "That doesn't attract dumb readers. It makes smart readers move faster — and it makes everyone else actually understand you.",
 		});
@@ -23,7 +25,7 @@ export class WelcomeModal extends Modal {
 			text: "I built this because most dev content is over-written. Docs nobody reads. Blog posts nobody finishes. Newsletters nobody opens twice.",
 		});
 		body.createEl("p", {
-			text: "If you write code AND content, I run a free community of Python devs who also build audiences.",
+			text: "If you write code and content, I run a free community of Python devs who also build audiences.",
 		});
 		body.createEl("p", { text: "We share templates, review each other's writing, and ship together." });
 
