@@ -3,9 +3,9 @@
 	"name": "Hemingway Markdown",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Write at a 3rd-grade level. Sell more. Sound smarter. Hemingway-style readability in Obsidian — grade level, hard sentences, passive voice, simpler words. Built by the community at skool.com/coder",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Write at a 3rd-grade level. Sell more. Sound smarter. Hemingway-style readability in Obsidian — grade level, hard sentences, passive voice, simpler words.",
+	"author": "Maximus Meadowcroft",
+	"authorUrl": "https://www.skool.com/coder",
+	"fundingUrl": "https://www.skool.com/coder/plans",
 	"isDesktopOnly": false
 }

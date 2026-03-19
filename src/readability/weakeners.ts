@@ -6,6 +6,41 @@
 import { QUALIFIERS } from "./qualifiers";
 import { SIMPLER_ALTERNATIVES } from "./simplerAlternatives";
 
+/**
+ * Words ending in -ly that match the adverb regex but are usually adjectives,
+ * time words, or proper-style nouns (not Hemingway-style "weak" adverbs).
+ */
+const ADVERB_LY_EXCEPTIONS = new Set([
+	"daily",
+	"weekly",
+	"monthly",
+	"yearly",
+	"hourly",
+	"nightly",
+	"early",
+	"only",
+	"ugly",
+	"holy",
+	"silly",
+	"jolly",
+	"lonely",
+	"lovely",
+	"friendly",
+	"likely", // often adjective ("a likely outcome")
+	"family",
+	"burly",
+	"surly",
+	"costly",
+	"ghastly",
+	"manly",
+	"womanly",
+	"comely",
+	"orderly",
+	"scholarly",
+	"timely",
+	"worldly",
+]);
+
 function escapeRegExp(s: string): string {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -26,6 +61,8 @@ export function findAdverbRanges(text: string): TextRange[] {
 	const re = /\b[a-z]+ly\b/gi;
 	let match: RegExpExecArray | null;
 	while ((match = re.exec(text)) !== null) {
+		const word = match[0].toLowerCase();
+		if (ADVERB_LY_EXCEPTIONS.has(word)) continue;
 		ranges.push({
 			start: match.index,
 			end: match.index + match[0].length,
